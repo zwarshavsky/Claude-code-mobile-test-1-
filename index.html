@@ -6,353 +6,199 @@
 <title>Claude Code Power Functions</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
   :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --border: #30363d;
-    --text: #e6edf3;
-    --dim: #8b949e;
-    --green: #3fb950;
-    --cyan: #79c0ff;
-    --yellow: #e3b341;
-    --magenta: #d2a8ff;
-    --red: #f85149;
-    --orange: #ffa657;
+    --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3;
+    --dim: #8b949e; --green: #3fb950; --cyan: #79c0ff; --yellow: #e3b341;
+    --magenta: #d2a8ff; --red: #f85149; --orange: #ffa657;
   }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Mono', 'Fira Code', monospace;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    touch-action: pan-y;
-  }
-
-  .header {
-    padding: 12px 16px 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .header-title { font-size: 13px; font-weight: 700; color: var(--cyan); letter-spacing: 0.5px; }
-  .header-score { font-size: 12px; color: var(--dim); }
-  .score-num { color: var(--green); font-weight: 700; }
-
-  .progress-wrap { height: 3px; background: var(--border); flex-shrink: 0; }
-  .progress-bar { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--green)); transition: width 0.3s; }
-
-  .mode-bar {
-    display: flex;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .mode-btn {
-    flex: 1;
-    padding: 10px;
-    background: none;
-    border: none;
-    color: var(--dim);
-    font-size: 13px;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.15s;
-    border-bottom: 2px solid transparent;
-  }
-  .mode-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
-
-  .card-area {
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .card {
-    position: absolute;
-    inset: 0;
-    padding: 20px 16px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.25s;
-  }
-
-  .card.slide-left  { transform: translateX(-100%); opacity: 0; pointer-events: none; }
-  .card.slide-right { transform: translateX(100%);  opacity: 0; pointer-events: none; }
-
-  .category-badge {
-    display: inline-block;
-    padding: 3px 10px;
-    background: #21262d;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    font-size: 11px;
-    color: var(--yellow);
-    letter-spacing: 0.3px;
-    width: fit-content;
-  }
-
-  .tip-name {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--cyan);
-    line-height: 1.2;
-    background: #0d2135;
-    border: 1px solid #1f4060;
-    border-radius: 10px;
-    padding: 14px 16px;
-    font-family: 'SF Mono', 'Fira Code', monospace;
-  }
-
-  .desc { font-size: 15px; line-height: 1.5; }
-
-  .info-block {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .info-label { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; }
-  .info-text  { font-size: 14px; line-height: 1.4; }
-  .info-text.pro { color: var(--magenta); }
-  .info-text.usage { color: var(--orange); font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; }
-
-  .quiz-question { font-size: 16px; color: var(--dim); margin-bottom: 4px; }
-  .quiz-tip {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--cyan);
-    background: #0d2135;
-    border: 1px solid #1f4060;
-    border-radius: 10px;
-    padding: 16px;
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    text-align: center;
-  }
-  .options { display: flex; flex-direction: column; gap: 10px; }
-  .option-btn {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px;
-    color: var(--text);
-    font-family: inherit;
-    font-size: 14px;
-    text-align: left;
-    cursor: pointer;
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    transition: all 0.15s;
-    line-height: 1.4;
-  }
-  .option-btn:active { opacity: 0.7; }
-  .option-letter { font-weight: 700; color: var(--cyan); flex-shrink: 0; width: 18px; }
-  .option-btn.correct { background: #0d2a0d; border-color: var(--green); }
-  .option-btn.correct .option-letter { color: var(--green); }
-  .option-btn.wrong   { background: #2a0d0d; border-color: var(--red); opacity: 0.6; }
-  .option-btn.wrong   .option-letter { color: var(--red); }
-  .option-btn.disabled { cursor: default; }
-
-  .quiz-feedback {
-    background: #1a1228;
-    border: 1px solid #6e40c9;
-    border-radius: 10px;
-    padding: 12px 14px;
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--magenta);
-    display: none;
-  }
-  .quiz-feedback.show { display: block; }
-
-  .nav {
-    display: flex;
-    gap: 10px;
-    padding: 12px 16px;
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .nav-btn {
-    flex: 1;
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text);
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .nav-btn:active { opacity: 0.7; transform: scale(0.97); }
-  .nav-btn.primary { background: #0d2135; border-color: var(--cyan); color: var(--cyan); }
-  .nav-btn:disabled { opacity: 0.25; cursor: default; }
-
+  body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'SF Mono','Fira Code',monospace; min-height:100dvh; display:flex; flex-direction:column; overflow:hidden; touch-action:pan-y; }
+  .header { padding:12px 16px 8px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .header-title { font-size:13px; font-weight:700; color:var(--cyan); letter-spacing:0.5px; }
+  .header-score { font-size:12px; color:var(--dim); }
+  .score-num { color:var(--green); font-weight:700; }
+  .progress-wrap { height:3px; background:var(--border); flex-shrink:0; }
+  .progress-bar { height:100%; background:linear-gradient(90deg,var(--cyan),var(--green)); transition:width 0.3s; }
+  .mode-bar { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .mode-btn { flex:1; padding:10px; background:none; border:none; color:var(--dim); font-size:13px; font-family:inherit; cursor:pointer; transition:all 0.15s; border-bottom:2px solid transparent; }
+  .mode-btn.active { color:var(--cyan); border-bottom-color:var(--cyan); }
+  .card-area { flex:1; overflow:hidden; position:relative; }
+  .card { position:absolute; inset:0; padding:20px 16px; overflow-y:auto; display:flex; flex-direction:column; gap:14px; transition:transform 0.25s cubic-bezier(0.4,0,0.2,1),opacity 0.25s; }
+  .card.slide-left  { transform:translateX(-100%); opacity:0; pointer-events:none; }
+  .card.slide-right { transform:translateX(100%);  opacity:0; pointer-events:none; }
+  .category-badge { display:inline-block; padding:3px 10px; background:#21262d; border:1px solid var(--border); border-radius:20px; font-size:11px; color:var(--yellow); letter-spacing:0.3px; width:fit-content; }
+  .tip-name { font-size:22px; font-weight:700; color:var(--cyan); line-height:1.2; background:#0d2135; border:1px solid #1f4060; border-radius:10px; padding:14px 16px; font-family:'SF Mono','Fira Code',monospace; }
+  .new-badge { display:inline-block; padding:1px 7px; background:#2d1a00; border:1px solid var(--orange); border-radius:10px; font-size:10px; color:var(--orange); margin-left:8px; vertical-align:middle; font-family:inherit; }
+  .desc { font-size:15px; line-height:1.5; }
+  .info-block { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:6px; }
+  .info-label { font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .info-text { font-size:14px; line-height:1.4; }
+  .info-text.pro { color:var(--magenta); }
+  .info-text.usage { color:var(--orange); font-family:'SF Mono','Fira Code',monospace; font-size:13px; }
+  .quiz-question { font-size:16px; color:var(--dim); margin-bottom:4px; }
+  .quiz-tip { font-size:24px; font-weight:700; color:var(--cyan); background:#0d2135; border:1px solid #1f4060; border-radius:10px; padding:16px; font-family:'SF Mono','Fira Code',monospace; text-align:center; }
+  .options { display:flex; flex-direction:column; gap:10px; }
+  .option-btn { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; color:var(--text); font-family:inherit; font-size:14px; text-align:left; cursor:pointer; display:flex; gap:10px; align-items:flex-start; transition:all 0.15s; line-height:1.4; }
+  .option-btn:active { opacity:0.7; }
+  .option-letter { font-weight:700; color:var(--cyan); flex-shrink:0; width:18px; }
+  .option-btn.correct { background:#0d2a0d; border-color:var(--green); }
+  .option-btn.correct .option-letter { color:var(--green); }
+  .option-btn.wrong   { background:#2a0d0d; border-color:var(--red); opacity:0.6; }
+  .option-btn.wrong   .option-letter { color:var(--red); }
+  .option-btn.disabled { cursor:default; }
+  .quiz-feedback { background:#1a1228; border:1px solid #6e40c9; border-radius:10px; padding:12px 14px; font-size:14px; line-height:1.5; color:var(--magenta); display:none; }
+  .quiz-feedback.show { display:block; }
+  .nav { display:flex; gap:10px; padding:12px 16px; border-top:1px solid var(--border); flex-shrink:0; }
+  .nav-btn { flex:1; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-family:inherit; font-size:15px; font-weight:600; cursor:pointer; transition:all 0.15s; }
+  .nav-btn:active { opacity:0.7; transform:scale(0.97); }
+  .nav-btn.primary { background:#0d2135; border-color:var(--cyan); color:var(--cyan); }
+  .nav-btn:disabled { opacity:0.25; cursor:default; }
   @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 #79c0ff44} 50%{box-shadow:0 0 0 8px #79c0ff00} }
-  .nav-btn.pulse { animation: pulse 1s ease infinite; }
-
-  .counter {
-    text-align: center;
-    font-size: 12px;
-    color: var(--dim);
-    padding: 2px 0 8px;
-    flex-shrink: 0;
-  }
+  .nav-btn.pulse { animation:pulse 1s ease infinite; }
+  .counter { text-align:center; font-size:12px; color:var(--dim); padding:2px 0 8px; flex-shrink:0; }
 </style>
 </head>
 <body>
-
 <div class="header">
   <span class="header-title">&#9889; CLAUDE CODE</span>
   <span class="header-score" id="scoreDisplay" style="display:none">Score: <span class="score-num" id="scoreNum">0</span>/<span id="scoreDen">0</span></span>
 </div>
-
-<div class="progress-wrap">
-  <div class="progress-bar" id="progressBar" style="width:4%"></div>
-</div>
-
+<div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
 <div class="mode-bar">
   <button class="mode-btn active" id="btnLearn" onclick="setMode('learn')">&#128214; Learn</button>
   <button class="mode-btn"        id="btnQuiz"  onclick="setMode('quiz')">&#129504; Quiz</button>
 </div>
-
-<div class="card-area" id="cardArea">
-  <div class="card" id="card"></div>
-</div>
-
-<div class="counter" id="counter">1 / 25</div>
-
+<div class="card-area"><div class="card" id="card"></div></div>
+<div class="counter" id="counter"></div>
 <div class="nav">
   <button class="nav-btn" id="btnPrev" onclick="go(-1)" disabled>&larr; Prev</button>
   <button class="nav-btn primary" id="btnNext" onclick="go(1)">Next &rarr;</button>
 </div>
-
 <script>
-const lessons = [
-  { category:'&#9889; Slash Commands', tip:'/clear',        desc:'Clear conversation history but keep your session alive.',                           usage:'/clear  &mdash; when context gets bloated.',                                        pro:'Keeps memory low on long coding sessions.' },
-  { category:'&#9889; Slash Commands', tip:'/compact',      desc:'Compress conversation history into a summary to save context.',                     usage:'/compact  &mdash; Claude summarizes, then continues.',                              pro:'Use before starting a new sub-task in a long session.' },
-  { category:'&#9889; Slash Commands', tip:'/cost',         desc:'Show token usage and estimated cost for the current session.',                       usage:'Type /cost anytime to check spending.',                                       pro:'Great for tracking API spend during heavy refactors.' },
-  { category:'&#9889; Slash Commands', tip:'/doctor',       desc:'Run a health check on your Claude Code installation.',                              usage:'/doctor &mdash; checks API keys, MCP servers, config.',                            pro:'First thing to run when something feels broken.' },
-  { category:'&#9889; Slash Commands', tip:'/model',        desc:'Switch the Claude model powering your session.',                                    usage:'/model claude-opus-4-6  or  /model claude-haiku-4-5',                        pro:'Use Haiku for quick edits, Opus for complex architecture.' },
-  { category:'&#9889; Slash Commands', tip:'/review',       desc:'Ask Claude to review the current diff or recent changes.',                          usage:'After editing files, type /review for instant code review.',                 pro:'Pair with /commit for a review-then-commit workflow.' },
-  { category:'&#9889; Slash Commands', tip:'/commit',       desc:'Claude writes the git commit message and commits for you.',                         usage:'Stage your files, then type /commit.',                                        pro:'Messages follow conventional commits style automatically.' },
-  { category:'&#9889; Slash Commands', tip:'/init',         desc:'Bootstrap a CLAUDE.md file with project context.',                                  usage:'/init &mdash; Claude analyzes your repo and writes persistent instructions.',       pro:'CLAUDE.md is read every session &mdash; put coding standards there.' },
-  { category:'&#128295; Flags &amp; Modes',  tip:'--print',       desc:'Non-interactive mode &mdash; output result to stdout and exit.',                          usage:'claude --print &quot;summarize README.md&quot; &gt; summary.txt',                         pro:'Pipe Claude into shell scripts and CI pipelines.' },
-  { category:'&#128295; Flags &amp; Modes',  tip:'--continue',    desc:'Resume the most recent conversation.',                                              usage:'claude --continue  &rarr;  picks up exactly where you left off.',                 pro:'No need to re-explain context when switching terminals.' },
-  { category:'&#128295; Flags &amp; Modes',  tip:'--resume &lt;id&gt;', desc:'Resume a specific past conversation by session ID.',                                usage:'claude --resume abc123  (get IDs from /history)',                            pro:'Juggle multiple feature branches with separate contexts.' },
-  { category:'&#128295; Flags &amp; Modes',  tip:'--dangerously-skip-permissions', desc:'Auto-approve ALL tool calls &mdash; no confirmation prompts.',           usage:'Use in safe sandboxes or Docker containers only!',                            pro:'Ideal for automated CI pipelines.' },
-  { category:'&#128295; Flags &amp; Modes',  tip:'--allowedTools',desc:'Restrict which tools Claude can use in the session.',                               usage:'claude --allowedTools &quot;Read,Write,Bash(git*)&quot;',                              pro:'Scope permissions tightly for automated tasks.' },
-  { category:'&#128193; CLAUDE.md',      tip:'Project CLAUDE.md', desc:'Persistent instructions Claude reads at the start of every session.',           usage:'Add coding standards, architecture notes, forbidden patterns.',               pro:'Put &quot;never use var, always use const/let&quot; and it sticks forever.' },
-  { category:'&#128193; CLAUDE.md',      tip:'~/.claude/CLAUDE.md', desc:'Global instructions that apply across all your projects.',                    usage:'Add your name, preferred stack, personal coding style.',                      pro:'Claude knows your preferences without repeating them.' },
-  { category:'&#128193; CLAUDE.md',      tip:'@imports in CLAUDE.md', desc:'Import other files into CLAUDE.md using @path/to/file syntax.',             usage:'Add @docs/api-spec.md to pull in specs automatically.',                       pro:'Keep CLAUDE.md lean while referencing large docs.' },
-  { category:'&#128268; MCP Servers',    tip:'MCP Overview',  desc:'Model Context Protocol &mdash; plug external tools &amp; data sources into Claude.',          usage:'claude mcp add &lt;name&gt; -- &lt;command&gt;',                                          pro:'Connect GitHub, Postgres, Slack, browser automation, and more.' },
-  { category:'&#128268; MCP Servers',    tip:'claude mcp list',desc:'List all configured MCP servers.',                                                  usage:'Run anytime to see what tools Claude has access to.',                         pro:'Scopes: local (project), user (global), project (.mcp.json).' },
-  { category:'&#127907; Hooks',          tip:'PreToolUse hook',desc:'Run a shell command before Claude uses any tool.',                                  usage:'In settings.json: hooks &rarr; PreToolUse &rarr; matcher + command',                   pro:'Auto-run linter before every file write.' },
-  { category:'&#127907; Hooks',          tip:'PostToolUse hook',desc:'Run a shell command after Claude uses any tool.',                                  usage:'In settings.json: hooks &rarr; PostToolUse &rarr; matcher + command',                  pro:'Auto-run tests after every Bash call.' },
-  { category:'&#127907; Hooks',          tip:'Notification hook',desc:'Trigger a shell command when Claude needs your attention.',                       usage:'Send desktop notifications or play a sound.',                                 pro:'Never miss when a long task finishes while you grab coffee.' },
-  { category:'&#127907; Hooks',          tip:'Stop hook',      desc:'Fires when Claude finishes responding.',                                            usage:'Log session stats, post to Slack, trigger CI &mdash; all automated.',               pro:'Chain Claude into larger automated workflows.' },
-  { category:'&#129504; Power Patterns', tip:'VS Code Extension',desc:'Claude Code runs inside VS Code as a sidebar panel.',                            usage:'Install &quot;Claude Code&quot; &rarr; Ctrl+Shift+P &rarr; Claude Code',                         pro:'Click any terminal error and ask Claude to fix it inline.' },
-  { category:'&#129504; Power Patterns', tip:'Headless / Agent mode',desc:'Run Claude as an autonomous agent from the command line.',                   usage:'claude -p &quot;fix all TypeScript errors&quot; --output-format json',                 pro:'Orchestrate multi-step workflows programmatically.' },
-  { category:'&#129504; Power Patterns', tip:'Multi-Claude + git worktrees',desc:'Run multiple Claude instances on different branches simultaneously.', usage:'git worktree add ../feat-b &amp;&amp; cd ../feat-b &amp;&amp; claude',                        pro:'Parallelize independent features &mdash; massive throughput gains.' },
+const L = [
+  // ── Slash Commands ──────────────────────────────────────────────────────────
+  { cat:'&#9889; Slash Commands', tip:'/clear', desc:'Clear conversation history but keep your session alive.', use:'/clear when context gets bloated and Claude starts hallucinating.', pro:'Keeps memory low on long coding sessions.' },
+  { cat:'&#9889; Slash Commands', tip:'/compact', desc:'Compress conversation history into a summary to save context.', use:'/compact &mdash; Claude summarizes, then continues seamlessly.', pro:'Use before starting a new sub-task in a long session.' },
+  { cat:'&#9889; Slash Commands', tip:'/cost', desc:'Show token usage and estimated cost for the current session.', use:'Type /cost anytime to check spending.', pro:'Great for tracking API spend during heavy refactors.' },
+  { cat:'&#9889; Slash Commands', tip:'/doctor', desc:'Run a health check on your Claude Code installation.', use:'/doctor &mdash; checks API keys, MCP servers, config files.', pro:'First thing to run when something feels broken.' },
+  { cat:'&#9889; Slash Commands', tip:'/model', desc:'Switch the Claude model powering your session instantly.', use:'/model claude-opus-4-6  or  /model claude-haiku-4-5', pro:'Use Haiku for quick edits, Opus for complex architecture.' },
+  { cat:'&#9889; Slash Commands', tip:'/review', desc:'Ask Claude to review the current diff or recent changes.', use:'After editing files, type /review for instant code review.', pro:'Pair with /commit for a clean review-then-commit workflow.' },
+  { cat:'&#9889; Slash Commands', tip:'/commit', desc:'Claude writes the git commit message and commits for you.', use:'Stage your files, then type /commit.', pro:'Messages follow conventional commits style automatically.' },
+  { cat:'&#9889; Slash Commands', tip:'/init', desc:'Bootstrap a CLAUDE.md file with project context and standards.', use:'/init &mdash; Claude analyzes your repo and writes persistent instructions.', pro:'CLAUDE.md is read every session &mdash; put coding standards there.' },
+  // ── Flags & Modes ────────────────────────────────────────────────────────────
+  { cat:'&#128295; Flags &amp; Modes', tip:'--print', desc:'Non-interactive mode &mdash; output result to stdout and exit.', use:'claude --print &quot;summarize README.md&quot; &gt; summary.txt', pro:'Pipe Claude into shell scripts and CI pipelines.' },
+  { cat:'&#128295; Flags &amp; Modes', tip:'--continue', desc:'Resume the most recent conversation, full context intact.', use:'claude --continue &rarr; picks up exactly where you left off.', pro:'No need to re-explain context when switching terminals.' },
+  { cat:'&#128295; Flags &amp; Modes', tip:'--resume &lt;id&gt;', desc:'Resume a specific past conversation by session ID.', use:'claude --resume abc123  (get IDs from /history)', pro:'Juggle multiple feature branches with separate contexts.' },
+  { cat:'&#128295; Flags &amp; Modes', tip:'--dangerously-skip-permissions', desc:'Auto-approve ALL tool calls &mdash; zero confirmation prompts.', use:'Use only in safe sandboxes or Docker containers!', pro:'Ideal for automated CI pipelines.' },
+  { cat:'&#128295; Flags &amp; Modes', tip:'--allowedTools', desc:'Restrict which tools Claude can use in this session.', use:'claude --allowedTools &quot;Read,Write,Bash(git*)&quot;', pro:'Scope permissions tightly for automated tasks.' },
+  // ── CLAUDE.md ────────────────────────────────────────────────────────────────
+  { cat:'&#128193; CLAUDE.md', tip:'Project CLAUDE.md', desc:'Persistent instructions Claude reads at the start of every session.', use:'Add coding standards, architecture notes, forbidden patterns.', pro:'Put &quot;never use var&quot; in CLAUDE.md and it sticks forever.' },
+  { cat:'&#128193; CLAUDE.md', tip:'~/.claude/CLAUDE.md', desc:'Global instructions that apply across ALL your projects.', use:'Add your name, preferred stack, personal coding style.', pro:'Claude knows your preferences without you repeating them.' },
+  { cat:'&#128193; CLAUDE.md', tip:'@imports in CLAUDE.md', desc:'Pull in other files into CLAUDE.md using @path/to/file syntax.', use:'Add @docs/api-spec.md to pull in specs automatically.', pro:'Keep CLAUDE.md lean while referencing large docs.' },
+  // ── MCP Servers ──────────────────────────────────────────────────────────────
+  { cat:'&#128268; MCP Servers', tip:'MCP Overview', desc:'Model Context Protocol &mdash; plug external tools &amp; data directly into Claude.', use:'claude mcp add &lt;name&gt; -- &lt;command&gt;', pro:'Connect GitHub, Postgres, Slack, browser automation, and more.' },
+  { cat:'&#128268; MCP Servers', tip:'claude mcp list', desc:'List all configured MCP servers and their status.', use:'Run anytime to see what tools Claude has access to.', pro:'Scopes: local (project), user (global), project (.mcp.json).' },
+  // ── Hooks ────────────────────────────────────────────────────────────────────
+  { cat:'&#127907; Hooks', tip:'PreToolUse hook', desc:'Run a shell command before Claude uses any tool.', use:'settings.json &rarr; hooks &rarr; PreToolUse &rarr; matcher + command', pro:'Auto-run linter before every file write.' },
+  { cat:'&#127907; Hooks', tip:'PostToolUse hook', desc:'Run a shell command after Claude uses any tool.', use:'settings.json &rarr; hooks &rarr; PostToolUse &rarr; matcher + command', pro:'Auto-run tests after every Bash call.' },
+  { cat:'&#127907; Hooks', tip:'Notification hook', desc:'Trigger a shell command when Claude needs your attention.', use:'Send desktop notifications or play a sound.', pro:'Never miss when a long task finishes while you grab coffee.' },
+  { cat:'&#127907; Hooks', tip:'Stop hook', desc:'Fires when Claude finishes responding &mdash; every single time.', use:'Log session stats, post to Slack, trigger CI &mdash; fully automated.', pro:'Chain Claude into larger automated workflows.' },
+  // ── Power Patterns ───────────────────────────────────────────────────────────
+  { cat:'&#129504; Power Patterns', tip:'VS Code Extension', desc:'Claude Code runs inside VS Code as a sidebar panel.', use:'Install &quot;Claude Code&quot; &rarr; Ctrl+Shift+P &rarr; Claude Code', pro:'Click any terminal error and ask Claude to fix it inline.' },
+  { cat:'&#129504; Power Patterns', tip:'Headless / Agent mode', desc:'Run Claude as an autonomous agent from the command line.', use:'claude -p &quot;fix all TypeScript errors&quot; --output-format json', pro:'Orchestrate multi-step workflows programmatically.' },
+  { cat:'&#129504; Power Patterns', tip:'Multi-Claude + git worktrees', desc:'Run multiple Claude instances on different branches simultaneously.', use:'git worktree add ../feat-b &amp;&amp; cd ../feat-b &amp;&amp; claude', pro:'Parallelize independent features &mdash; massive throughput gains.' },
+  // ── Breakthroughs ────────────────────────────────────────────────────────────
+  { cat:'&#128293; Breakthroughs', tip:'Custom Slash Commands', isnew:true, desc:'Define your own /project:cmd commands by dropping markdown files into .claude/commands/.', use:'.claude/commands/deploy.md &rarr; type /project:deploy in any session', pro:'Commit .claude/commands/ to git and the whole team gets your commands instantly.' },
+  { cat:'&#128293; Breakthroughs', tip:'think / ultrathink', isnew:true, desc:'Trigger extended reasoning by literally writing "think harder" or "ultrathink" in your message.', use:'&quot;ultrathink the best architecture for this auth system&quot;', pro:'Allocates progressively more thinking tokens &mdash; ultrathink = maximum depth reasoning.' },
+  { cat:'&#128293; Breakthroughs', tip:'Bash(git*) scoped perms', isnew:true, desc:'Grant Claude permission to run only specific shell patterns, not all Bash commands.', use:'--allowedTools &quot;Bash(git log*),Bash(npm run test*)&quot;', pro:'Surgical control over what Claude can execute &mdash; much safer than full Bash access.' },
+  { cat:'&#128293; Breakthroughs', tip:'stdin piping', isnew:true, desc:'Pipe any file, log, or command output directly into Claude as context.', use:'cat error.log | claude -p &quot;what caused this crash?&quot;', pro:'Chain tools: git diff | claude -p &quot;write a changelog entry&quot;' },
+  { cat:'&#128293; Breakthroughs', tip:'--output-format stream-json', isnew:true, desc:'Stream structured JSON events from Claude &mdash; every tool call and text chunk is parseable.', use:'claude -p &quot;...&quot; --output-format stream-json | jq .', pro:'Build dashboards, loggers, or custom UIs on top of Claude Code output.' },
+  { cat:'&#128293; Breakthroughs', tip:'Sub-agents (Task tool)', isnew:true, desc:'Claude autonomously spawns and orchestrates multiple child agents in parallel.', use:'Ask Claude to &quot;parallelize this across agents&quot; on complex tasks.', pro:'Claude handles spawning, delegating, and merging results &mdash; you just describe the goal.' },
+  { cat:'&#128293; Breakthroughs', tip:'Vision / image input', isnew:true, desc:'Drag screenshots, diagrams, or UI mockups directly into the Claude Code chat.', use:'Drag a screenshot of a bug &rarr; &quot;fix what you see here&quot;', pro:'Works with error screenshots, design mockups, and hand-drawn architecture diagrams.' },
+  { cat:'&#128293; Breakthroughs', tip:'.mcp.json (project file)', isnew:true, desc:'Commit MCP server config to your repo so the whole team shares tools automatically.', use:'Create .mcp.json at repo root &mdash; Claude loads it for every team member.', pro:'No more &quot;works on my machine&quot; for MCP tools &mdash; config travels with the code.' },
+  { cat:'&#128293; Breakthroughs', tip:'Permission rules in settings', isnew:true, desc:'Pre-approve or permanently deny specific tool patterns without being asked each session.', use:'settings.json &rarr; permissions &rarr; allow: [&quot;Bash(npm run test)&quot;]', pro:'Set once, never approve the same action again. Deny risky patterns forever.' },
+  { cat:'&#128293; Breakthroughs', tip:'ANTHROPIC_MODEL env var', isnew:true, desc:'Set your default model globally via environment variable &mdash; no /model command needed.', use:'export ANTHROPIC_MODEL=claude-opus-4-6 in your .zshrc', pro:'Pair with ANTHROPIC_SMALL_FAST_MODEL to control both orchestrator and subagent models.' },
+  { cat:'&#128293; Breakthroughs', tip:'--add-dir', isnew:true, desc:'Add directories outside your current working directory to Claude\'s context.', use:'claude --add-dir ~/shared-libs --add-dir ../design-system', pro:'Read, search, and edit across multiple repos in one session.' },
+  { cat:'&#128293; Breakthroughs', tip:'/memory command', isnew:true, desc:'Instantly save a fact to Claude\'s persistent memory that survives all future sessions.', use:'/memory &quot;always use pnpm, never npm&quot; &rarr; stored in CLAUDE.md automatically', pro:'Build a personal knowledge base over time &mdash; Claude gets smarter about you with each session.' },
 ];
 
-let current = 0, mode = 'learn', score = 0;
-let quizAnswered = false, quizOptions = [], correctIdx = 0, quizCount = 0;
+let cur=0, mode='learn', score=0, quizAnswered=false, quizOpts=[], correctIdx=0, quizCount=0;
+let tx=0, ty=0;
+document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dx)>Math.abs(dy)+10&&Math.abs(dx)>40)go(dx<0?1:-1);
+},{passive:true});
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')go(1);if(e.key==='ArrowLeft')go(-1);});
 
-let touchStartX = 0, touchStartY = 0;
-document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, { passive: true });
-document.addEventListener('touchend', e => {
-  const dx = e.changedTouches[0].clientX - touchStartX;
-  const dy = e.changedTouches[0].clientY - touchStartY;
-  if (Math.abs(dx) > Math.abs(dy) + 10 && Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
-}, { passive: true });
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowRight') go(1);
-  if (e.key === 'ArrowLeft') go(-1);
-});
-
-function setMode(m) {
-  mode = m;
-  document.getElementById('btnLearn').classList.toggle('active', m === 'learn');
-  document.getElementById('btnQuiz').classList.toggle('active', m === 'quiz');
-  document.getElementById('scoreDisplay').style.display = m === 'quiz' ? '' : 'none';
-  if (m === 'quiz') { score = 0; quizCount = 0; makeQuiz(); }
+function setMode(m){
+  mode=m;
+  document.getElementById('btnLearn').classList.toggle('active',m==='learn');
+  document.getElementById('btnQuiz').classList.toggle('active',m==='quiz');
+  document.getElementById('scoreDisplay').style.display=m==='quiz'?'':'none';
+  if(m==='quiz'){score=0;quizCount=0;makeQuiz();}
   render();
 }
-
-function makeQuiz() {
-  const l = lessons[current];
-  const others = lessons.filter((_, i) => i !== current).sort(() => Math.random() - 0.5).slice(0, 3);
-  const opts = [...others, l].sort(() => Math.random() - 0.5);
-  correctIdx = opts.indexOf(l);
-  quizOptions = opts;
-  quizAnswered = false;
+function makeQuiz(){
+  const l=L[cur];
+  const others=L.filter((_,i)=>i!==cur).sort(()=>Math.random()-0.5).slice(0,3);
+  const opts=[...others,l].sort(()=>Math.random()-0.5);
+  correctIdx=opts.indexOf(l);quizOpts=opts;quizAnswered=false;
 }
-
-function answer(idx) {
-  if (quizAnswered) return;
-  quizAnswered = true; quizCount++;
-  if (idx === correctIdx) score++;
-  document.getElementById('scoreNum').textContent = score;
-  document.getElementById('scoreDen').textContent = quizCount;
-  document.querySelectorAll('.option-btn').forEach((btn, i) => {
+function answer(idx){
+  if(quizAnswered)return;
+  quizAnswered=true;quizCount++;
+  if(idx===correctIdx)score++;
+  document.getElementById('scoreNum').textContent=score;
+  document.getElementById('scoreDen').textContent=quizCount;
+  document.querySelectorAll('.option-btn').forEach((btn,i)=>{
     btn.classList.add('disabled');
-    if (i === correctIdx) btn.classList.add('correct');
-    else if (i === idx)   btn.classList.add('wrong');
+    if(i===correctIdx)btn.classList.add('correct');
+    else if(i===idx)btn.classList.add('wrong');
   });
   document.getElementById('quizFeedback').classList.add('show');
-  const nb = document.getElementById('btnNext');
-  nb.textContent = 'Next \u2192'; nb.classList.add('pulse');
+  const nb=document.getElementById('btnNext');
+  nb.textContent='Next \u2192';nb.classList.add('pulse');
 }
-
-function go(dir) {
-  if (mode === 'quiz' && dir === 1 && !quizAnswered) return;
-  const newIdx = current + dir;
-  if (newIdx < 0 || newIdx >= lessons.length) return;
-  const card = document.getElementById('card');
-  card.classList.add(dir > 0 ? 'slide-left' : 'slide-right');
-  setTimeout(() => {
-    current = newIdx;
-    card.classList.remove('slide-left', 'slide-right');
+function go(dir){
+  if(mode==='quiz'&&dir===1&&!quizAnswered)return;
+  const n=cur+dir;
+  if(n<0||n>=L.length)return;
+  const card=document.getElementById('card');
+  card.classList.add(dir>0?'slide-left':'slide-right');
+  setTimeout(()=>{
+    cur=n;card.classList.remove('slide-left','slide-right');
     document.getElementById('btnNext').classList.remove('pulse');
-    if (mode === 'quiz') makeQuiz();
+    if(mode==='quiz')makeQuiz();
     render();
-  }, 220);
+  },220);
 }
-
-function render() {
-  const l = lessons[current];
-  const pct = (current + 1) / lessons.length;
-  document.getElementById('progressBar').style.width = (pct * 100) + '%';
-  document.getElementById('counter').textContent = (current + 1) + ' / ' + lessons.length;
-  document.getElementById('btnPrev').disabled = current === 0;
-  document.getElementById('btnNext').disabled = mode === 'learn' && current === lessons.length - 1;
-  const card = document.getElementById('card');
-  if (mode === 'learn') {
-    document.getElementById('btnNext').textContent = current === lessons.length - 1 ? 'Done' : 'Next \u2192';
-    card.innerHTML = '<div class="category-badge">' + l.category + '</div><div class="tip-name">' + l.tip + '</div><div class="desc">' + l.desc + '</div><div class="info-block"><div class="info-label">Usage</div><div class="info-text usage">' + l.usage + '</div></div><div class="info-block"><div class="info-label">Pro tip</div><div class="info-text pro">' + l.pro + '</div></div>';
+function render(){
+  const l=L[cur], pct=(cur+1)/L.length;
+  document.getElementById('progressBar').style.width=(pct*100)+'%';
+  document.getElementById('counter').textContent=(cur+1)+' / '+L.length;
+  document.getElementById('btnPrev').disabled=cur===0;
+  document.getElementById('btnNext').disabled=mode==='learn'&&cur===L.length-1;
+  const card=document.getElementById('card');
+  const nb=l.isnew?'<span class="new-badge">NEW</span>':'';
+  if(mode==='learn'){
+    document.getElementById('btnNext').textContent=cur===L.length-1?'Done':'Next \u2192';
+    card.innerHTML='<div class="category-badge">'+l.cat+'</div>'
+      +'<div class="tip-name">'+l.tip+nb+'</div>'
+      +'<div class="desc">'+l.desc+'</div>'
+      +'<div class="info-block"><div class="info-label">Usage</div><div class="info-text usage">'+l.use+'</div></div>'
+      +'<div class="info-block"><div class="info-label">Pro tip</div><div class="info-text pro">'+l.pro+'</div></div>';
   } else {
-    const nb = document.getElementById('btnNext');
-    nb.textContent = quizAnswered ? 'Next \u2192' : 'Pick an answer';
-    nb.disabled = !quizAnswered;
-    if (quizAnswered) nb.classList.add('pulse'); else nb.classList.remove('pulse');
-    const letters = ['A','B','C','D'];
-    card.innerHTML = '<div class="quiz-question">Tap the correct description</div><div class="quiz-tip">' + l.tip + '</div><div class="options">' + quizOptions.map((opt, i) => '<button class="option-btn" onclick="answer(' + i + ')"><span class="option-letter">' + letters[i] + '</span><span>' + opt.desc + '</span></button>').join('') + '</div><div class="quiz-feedback" id="quizFeedback">Pro tip: ' + l.pro + '</div>';
+    const n2=document.getElementById('btnNext');
+    n2.textContent=quizAnswered?'Next \u2192':'Pick an answer';
+    n2.disabled=!quizAnswered;
+    if(quizAnswered)n2.classList.add('pulse');else n2.classList.remove('pulse');
+    const ltrs=['A','B','C','D'];
+    card.innerHTML='<div class="quiz-question">Tap the correct description</div>'
+      +'<div class="quiz-tip">'+l.tip+'</div>'
+      +'<div class="options">'+quizOpts.map((o,i)=>'<button class="option-btn" onclick="answer('+i+')"><span class="option-letter">'+ltrs[i]+'</span><span>'+o.desc+'</span></button>').join('')+'</div>'
+      +'<div class="quiz-feedback" id="quizFeedback">Pro tip: '+l.pro+'</div>';
   }
 }
-
 render();
 </script>
 </body>
